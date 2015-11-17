@@ -8,7 +8,7 @@
     $mysql_table = "tb_prize";
     $mysql_record = "SELECT * FROM ".$mysql_table." where status=0 limit 1 ";
     $mysql_totalcount = "SELECT count(*) as totalCount FROM ".$mysql_table." where status='1'";
-    $mysql_switch = "SELECT * FROM tb_prizeSwitch";
+    $mysql_switch = "SELECT * FROM tb_prizeswitch";
     $con = mysql_connect($mysql_host.':'.$mysql_port, $mysql_user, $mysql_password, true);
     if (!$con){
         die('Could not connect: ' . mysql_error());
@@ -20,6 +20,7 @@
     $real_id="";
     $isPrize=0;
     $noPrize=0;
+    $randIndex=0;
     $totalRow=mysql_fetch_array($query);
     $switchStatus = mysql_fetch_array($switch);
     $total = $totalRow["totalCount"];
@@ -35,6 +36,7 @@
         if ($rowLen>0&&$row['id']!=null){
             $real_id = $row['id'];
             $index=mt_rand(0, 4);
+            $randIndex=$index;
             $isPrize=$resultArray[$index];
             //echo "值：".$isPrize;
         }else{
@@ -45,7 +47,7 @@
         $noPrize=1;
     }
    
-    echo "<script>var randIndex=\"$isPrize\";var real_id=\"$real_id\";var noPrize=\"$noPrize\";var switchResult=\"$switchResult\";</script>";
+    echo "<script>var randIndex=\"$randIndex\";var isPrize=\"$isPrize\";var real_id=\"$real_id\";var noPrize=\"$noPrize\";var switchResult=\"$switchResult\";</script>";
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -54,8 +56,13 @@
 <meta name="viewport" content="width=device-width; initial-scale=1.0">
 <title>刮刮卡效果</title>
 <style type="text/css">
-.demo{width:320px; margin:10px auto 20px auto; min-height:300px;}
-.msg{text-align:center; height:32px; line-height:32px; font-weight:bold; margin-top:50px}
+body{
+    margin: 0;
+    padding: 0;
+    background-color: red;
+}
+.demo{width:320px; margin:10px auto 20px auto; min-height:200px;}
+.msg{text-align:center; height:32px; line-height:32px; font-weight:bold; }
 .button{
 width: 70px;
 line-height: 25px;
@@ -74,6 +81,26 @@ box-shadow: 0 1px 2px #fedd71 inset,0 -1px 0 #a38b39 inset,0 -2px 3px #fedd71 in
 background: -webkit-linear-gradient(top,#fece34,#d8a605);
 background: -moz-linear-gradient(top,#fece34,#d8a605);
 background: linear-gradient(top,#fece34,#d8a605);
+cursor: pointer;
+}
+header {
+    margin: 20 auto;
+    text-align: center;
+    font-size: 20;
+    font-weight: 200;
+    color: #E0E805;
+}
+
+footer{
+    margin: 20;
+    font-size: 14;
+}
+footer .header{
+    color:#E0E805;
+}
+ul li{
+    color:#fff;
+    margin: 5 auto;
 }
 
 </style>
@@ -81,19 +108,30 @@ background: linear-gradient(top,#fece34,#d8a605);
 
 <body>
 <div id="main">
-   
-   <div class="msg"><a href="javascript:void(0)" onClick="window.location.reload()">再来一次</a></div>
-   <div class="msg">活动开始后，点击【再来一次】刷新界面，即可刮卡抽奖</div>
-    <div class="msg">温馨提示：如果中奖，会有提示，请拿着手机上台领奖并出示中奖提示</div>
-    <div class="msg" style="display:none;color:red;" id="noPrize">奖品被抢光了</div>
+   <header class="header">感谢参加我们的婚礼</header>
+   <section class="">
+       <div class="msg"><a href="javascript:void(0)" onClick="window.location.reload()">再刮一次</a></div>
+    <div class="msg" style="display:none;" id="noPrize">奖品被抢光了</div>
    <div class="demo">
         <canvas></canvas>
         <div id="acceptPrize" style="display: none;position: relative;top: 180;left: 60;">
-        <input type="text" value="" id="phone">
+        <input type="text" value="" id="phone" placeholder="手机号">
         <button onclick="javascript:lingjiang();" class="button yellow">领奖</button></div>
     </div>
-   </div>
+
+   </section>
+   <footer>
+    <div class="footerContainer">
+        <div class="header">活动规则</div>
+        <div style="clear:left;"></div>
+        <ul><li>活动开始后，点击【再刮一次】刷新界面，即可刮卡抽奖</li>
+            <li>想要中奖，就得刮干净点哦</li>
+           <li>如中奖，会有提示，请拿着手机上台领奖并出示中奖提示</li>
+       </ul>
+    </div>
     
+</footer>
+</div>
 <script src="http://libs.useso.com/js/jquery/1.10.0/jquery.min.js"></script>
 <script type="text/javascript">
 
@@ -111,8 +149,8 @@ var img = new Image();
 var canvas = document.querySelector('canvas');
 canvas.style.backgroundColor='transparent';
 canvas.style.position = 'absolute';
-var imgs = ['p_0.jpg','p_1.jpg'];
-console.log(randIndex);
+var imgs = ['p_0.jpg','p_1.jpg','p_2.jpg','p_3.jpg','p_4.jpg'];
+console.log(randIndex,isPrize);
 img.src = imgs[randIndex];
 
 img.addEventListener('load', function(e) {
@@ -131,11 +169,19 @@ img.addEventListener('load', function(e) {
     function eventDown(e){
         e.preventDefault();
         mousedown=true;
-        if (randIndex==1){
-            document.getElementById('acceptPrize').style.display="block";
-        }
     }
-
+    function getTransparentPercent() {
+        var imgData = ctx.getImageData(0, 0, w, h),
+            pixles = imgData.data,
+            transPixs = [];
+        for (var i = 0, j = pixles.length; i < j; i += 4) {
+            var a = pixles[i + 3];
+            if (a < 128) {
+                transPixs.push(i);
+            }
+        }
+        return (transPixs.length / (pixles.length / 4) * 100).toFixed(2);
+    }
     function eventUp(e){
         e.preventDefault();
         mousedown=false;
@@ -153,6 +199,14 @@ img.addEventListener('load', function(e) {
                  beginPath()
                  arc(x, y, 10, 0, Math.PI * 2);
                  fill();
+
+             }
+             if(getTransparentPercent()>50){
+                if (isPrize==1){
+                    document.getElementById('acceptPrize').style.display="block";
+                }else{
+                    $('#noPrize').html('很遗憾未中奖').show();
+                }
              }
         }
     }
